@@ -1,0 +1,43 @@
+#Zebra data
+#Plot points of zebra localities on map & extract bioclim variables
+
+library(rgdal)
+library(raster)
+
+#Import Worldclim raster
+tmax<-raster()
+plot(tmax)
+
+#or
+
+worldclim <- getData("worldclim", var = "bio", res = 2.5)
+worldclim
+worldclim[[1:4]]
+
+worldclim[[c("bio1","bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11")]]
+
+plot(worldclim[[c("bio1","bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11")]])
+
+
+#Crop extent
+crop <- c(-20, 60, -40, 40)
+tmax.crop <- crop(worldclim[[c("bio1","bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11")]], crop)
+plot(tmax.crop)
+
+zebraloc<-read.csv(file="localities2.csv", header=T, row.names=1, sep=";")
+#zebraloc<-read.table(file="localities2.txt", header=T, row.names=1)
+
+zebraloc
+
+points(zebraloc$Lon, zebraloc$Lat, col='blue', pch=15)
+
+coordinates(zebraloc)<-c("Lon", "Lat")
+
+#as the localities are based on centroids of large areas (entire game reserves), rather obtain mean values from a buffer zone
+zebratemps <- extract(tmax.crop, zebraloc, method='simple', buffer=10000, fun=mean, df=TRUE) ## If df=TRUE, the results are returned as a 'dataframe'
+
+head(zebratemps) 
+
+zebratempexport<-cbind(zebratemps, zebraloc)
+
+write.csv(zebratempexport, file="20200624_zebra_temp.csv", row.names=TRUE)
